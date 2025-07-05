@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Follower Analysis - {{ profile.username }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --instagram-gradient: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 1200px;
+        }
+
+        .header-section {
+            background: var(--instagram-gradient);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .profile-header {
+            position: relative;
+            z-index: 2;
+        }
+
+        .profile-username {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-username::before {
+            content: '@';
+            opacity: 0.7;
+        }
+
+        .action-buttons {
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-instagram {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-instagram.scanning {
+            display: flex;
+        }
+
+        .btn-instagram:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-instagram:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            background: rgba(220, 53, 69, 0.8);
+            border: 2px solid rgba(220, 53, 69, 0.5);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(220, 53, 69, 0.9);
+            border-color: rgba(220, 53, 69, 0.7);
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1.5rem 2rem;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid #28a745;
+        }
+
+        .status-card.scanning {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fff8dc 0%, #fffacd 100%);
+        }
+
+        .status-card.error {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-bottom: none;
+        }
+
+        .card-header-custom.unfollowers {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+        }
+
+        .card-header-custom.not-following {
+            background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .count-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .user-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .user-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--instagram-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .spinner-custom {
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .last-scan-info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin: 1rem;
+                border-radius: 15px;
+            }
+
+            .header-section {
+                padding: 1.5rem;
+                border-radius: 15px 15px 0 0;
+            }
+
+            .profile-username {
+                font-size: 2rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="profile-header">
+                    <h1 class="profile-username">{{ profile.username }}</h1>
+                    <div class="last-scan-info">
+                        <i class="fas fa-clock"></i>
+                        Last scan: {{ latest_snapshot_time|default:"Never" }}
+                    </div>
+                </div>
+
+                <div class="action-buttons d-flex gap-3">
+                    <form action="{% url 'trigger_scan' %}" method="post">
+                        {% csrf_token %}
+                        {% if is_scanning %}
+                        <button type="submit" class="btn btn-instagram scanning" disabled>
+                            <div class="spinner-custom"></div>
+                            <span class="ms-2">Scanning...</span>
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-instagram">
+                            <i class="fas fa-search"></i>
+                            <span class="ms-2">Start New Scan</span>
+                        </button>
+                        {% endif %}
+                    </form>
+
+                    {% if is_scanning %}
+                    <form action="{% url 'cancel_scan' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-instagram btn-cancel">
+                            <i class="fas fa-stop"></i>
+                            <span class="ms-2">Cancel Scan</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Status/Error Section -->
+        {% if error %}
+        <div class="status-card error">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle text-danger me-3"></i>
+                <div>
+                    <h5 class="mb-1">Error Occurred</h5>
+                    <p class="mb-0">{{ error }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if is_scanning %}
+        <div class="status-card scanning">
+            <div class="d-flex align-items-center">
+                <div class="spinner-custom me-3"></div>
+                <div>
+                    <h5 class="mb-1">Scan in Progress</h5>
+                    <p class="mb-0">Analyzing your followers and following lists...</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Analytics Grid -->
+        <div class="analytics-grid">
+            <!-- Unfollowers Card -->
+            <div class="analytics-card">
+                <div class="card-header-custom unfollowers">
+                    <div class="card-title">
+                        <i class="fas fa-user-minus"></i>
+                        <span>Unfollowed You</span>
+                        <span class="count-badge">{{ unfollowers|length }}</span>
+                    </div>
+                </div>
+                <div class="user-list">
+                    {% for user in unfollowers %}
+                    <div class="user-item">
+                        <div class="user-avatar">
+                            {{ user|first|upper }}
+                        </div>
+                        <div class="user-name">{{ user }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-heart"></i>
+                        <h5>All Good!</h5>
+                        <p>No unfollowers detected since last scan.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Not Following Back Card -->
+            <div class="analytics-card">
+                <div class="card-header-custom not-following">
+                    <div class="card-title">
+                        <i class="fas fa-user-times"></i>
+                        <span>Not Following Back</span>
+                        <span class="count-badge">{{ not_following_back|length }}</span>
+                    </div>
+                </div>
+                <div class="user-list">
+                    {% for user in not_following_back %}
+                    <div class="user-item">
+                        <div class="user-avatar">
+                            {{ user|first|upper }}
+                        </div>
+                        <div class="user-name">{{ user }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-handshake"></i>
+                        <h5>Perfect Balance!</h5>
+                        <p>Everyone you follow is following you back.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        if ({{ is_scanning|yesno:"true,false" }}) {
+            setTimeout(() => {
+                location.reload();
+            }, 10000);
+        }
+        
+        document.querySelectorAll('.user-list').forEach(list => {
+            list.addEventListener('scroll', function () {
+                this.style.scrollBehavior = 'smooth';
+            });
+        });
+    </script>
+</body>
+
+</html>

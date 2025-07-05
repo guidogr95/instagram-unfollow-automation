@@ -1,0 +1,8 @@
+django==4.2.23
+celery==5.5.3
+redis==6.1.1
+selenium==4.27.1
+django-environ==0.11.2
+psycopg2-binary==2.9.10
+requests
+aiohttp==3.10.11

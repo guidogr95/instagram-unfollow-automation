@@ -1,0 +1,8 @@
+venv/
+.env
+debug/*
+!debug/.gitkeep
+cookies/*
+!cookies/.gitkeep.history/
+.vscode/
+.history/

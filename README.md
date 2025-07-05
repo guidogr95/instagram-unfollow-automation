@@ -1,6 +1,6 @@
 # 🕵️ Instagram Follower Detective 🔍
 
-*I definitely built this because I wanted to learn about async programming, web scraping, and distributed task queues and not because I care deeply about who unfollowed me on Instagram.* 😏
+###### *I definitely built this because I wanted to learn about async programming, web scraping, and distributed task queues and not because I care deeply about who unfollowed me on Instagram.* 😏
 
 ## 📸 Dashboard Preview
 <div align="center">
